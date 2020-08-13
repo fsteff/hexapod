@@ -1,0 +1,7 @@
+{
+  "C_Cpp.default.includePath": [
+    "D:\\Programme\\Arduino\\arduino-1.8.12\\libraries\\Servo\\src",
+    "D:\\Programme\\Arduino\\arduino-1.8.12\\hardware\\arduino",
+    "D:\\Programme\\Arduino\\arduino-1.8.12\\hardware\\arduino\\avr\\cores\\arduino"
+  ]
+}
