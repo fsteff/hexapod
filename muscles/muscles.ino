@@ -40,6 +40,7 @@ void setup() {
 
   feet[0].attach(2,3,4);
   feet[1].attach(5,6,7);
+  feet[2].attach(8,9,10);
   delay(1000);
 }
 
@@ -49,7 +50,7 @@ void loop() {
     ch = Serial.read();
     Serial.print(ch);
     serialBuf[serialPos++] = ch;
-    if (ch == '\r' || serialPos >= sizeof(serialBuf)) {
+    if (ch == '\n' || serialPos >= sizeof(serialBuf)) {
       Serial.println("");
       serialBuf[serialPos] = 0;
       if(serialPos > 1) processSerial();

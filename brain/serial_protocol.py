@@ -22,7 +22,6 @@ def connect_arduino(port):
     rtscts=False, 
     dsrdtr=False
     )
-  time.sleep(5)
   print('<< ' + readline(ser))
   print('successfully connected to serial port ' + port + ' / ' + ser.name)
   return ser
