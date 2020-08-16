@@ -43,7 +43,7 @@ float lawOfCosines(float a, float b, float c) {
   return acos((a*a + b*b - c*c) / (2 * a * b));
 }
 
-Foot::Foot() : servos{ServoCtrl(90), ServoCtrl(180), ServoCtrl(90)} {}
+Foot::Foot() : servos{ServoCtrl(90), ServoCtrl(0), ServoCtrl(90)} {}
 
 void Foot::attach(int pin1, int pin2, int pin3){
   servos[0].servo.attach(pin1);
@@ -75,19 +75,20 @@ void Foot::moveTo(float x, float y, float z, long ms){
   float d2 = lawOfCosines(dist, part2, part3);
 
   beta = (d1 + d2) * toDeg;
-  gamma = 180 - lawOfCosines(part2, part3, dist) * toDeg;
-
-  Serial.print("Move to "); Serial.print(x); Serial.print("/"); Serial.print(y); Serial.print("/"); Serial.println(z);
-  Serial.print("Equals "); Serial.print(alpha); Serial.print("/"); Serial.print(beta); Serial.print("/"); Serial.println(gamma);
-  //Serial.print("Using "); Serial.print(dist); Serial.print("/"); Serial.print(d1); Serial.print("/"); Serial.println(d2);
+  gamma = lawOfCosines(part2, part3, dist) * toDeg;
 
   if(!isnormal(alpha) || !isnormal(beta) || !isnormal(gamma)) {
-    Serial.println("Abort, result contains NaN!");
+    Serial.println("ERROR: Abort moving foot, result contains NaN");
     return;
   }
+  
+  Serial.println("OK");
+  //Serial.print("Move to "); Serial.print(x); Serial.print("/"); Serial.print(y); Serial.print("/"); Serial.println(z);
+  //Serial.print("Equals "); Serial.print(alpha); Serial.print("/"); Serial.print(beta); Serial.print("/"); Serial.println(gamma);
+  //Serial.print("Using "); Serial.print(dist); Serial.print("/"); Serial.print(d1); Serial.print("/"); Serial.println(d2);
 
   moveServo(servos[0], 90 + alpha, ms);
-  moveServo(servos[1], 90 + beta, ms);
+  moveServo(servos[1], 90 - beta, ms);
   moveServo(servos[2], 180 - gamma, ms);
 }
 

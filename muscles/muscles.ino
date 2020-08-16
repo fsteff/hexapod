@@ -26,9 +26,9 @@ void processSerial() {
   }
 
   if (values[0] < 6) {
-    feet[values[0]].moveTo(values[1], values[2], values[3], values[4]);
+    feet[values[0]].moveTo(values[1], values[2], values[3], values[4]);   
   } else {
-    Serial.print("Invalid foot number: ");
+    Serial.print("ERROR: Invalid foot number: ");
     Serial.println(values[0]);
   }
 
@@ -39,6 +39,7 @@ void setup() {
   Serial.println("Hello");
 
   feet[0].attach(2,3,4);
+  feet[1].attach(5,6,7);
   delay(1000);
 }
 
@@ -49,6 +50,7 @@ void loop() {
     Serial.print(ch);
     serialBuf[serialPos++] = ch;
     if (ch == '\r' || serialPos >= sizeof(serialBuf)) {
+      Serial.println("");
       serialBuf[serialPos] = 0;
       if(serialPos > 1) processSerial();
       serialPos = 0;
