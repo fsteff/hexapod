@@ -4,7 +4,7 @@
 #include <Servo.h>
 
 struct ServoCtrl {
-  const Servo servo;
+  int servoNum;
   int startPos;
   int targetPos;
   long targetTime;
@@ -18,12 +18,16 @@ class Foot{
   private:
     ServoCtrl servos[3];
     bool isAttached;
+    bool mirror;
+    
   public:
     Foot();
-    void attach(int pin1, int pin2, int pin3);
+    void attach(int pin1, int pin2, int pin3, bool mirror = false);
     void moveTo(float x, float y, float z, long ms);
     void update(int ms);
     bool isDone();
+
+    static void setupPWM();
 };
 
 #endif

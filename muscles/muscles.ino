@@ -1,4 +1,3 @@
-#include <Servo.h>
 #include "foot.h"
 
 #define SIGN(x) (x >= 0 ? 1 : -1)
@@ -37,10 +36,15 @@ void processSerial() {
 void setup() {
   Serial.begin(9600);
   Serial.println("Hello");
+  Foot::setupPWM();
 
-  feet[0].attach(2,3,4);
-  feet[1].attach(5,6,7);
-  feet[2].attach(8,9,10);
+  feet[0].attach(16,17,18);
+  feet[1].attach(19,20,21);
+  feet[2].attach(22,23,24);
+
+  feet[3].attach(0,1,2, true);
+  feet[4].attach(3,4,5, true);
+  feet[5].attach(6,7,8, true);
   delay(1000);
 }
 

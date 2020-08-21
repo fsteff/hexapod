@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
 #include <math.h>
 #include "foot.h"
 
@@ -11,19 +13,38 @@ const float part2 = 90.5;
 const float part3 = 83.5;
 const float toDeg = 180 / PI;
 
-void updateServo(ServoCtrl& ctrl, float interval)
+Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x41);
+Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x42);
+
+#define SERVOFREQ 60
+#define PULSE (1000/SERVOFREQ)
+#define SERVOMIN  (0.5 * 4096 / PULSE)  // this is the 'minimum' pulse length count (out of 4096) - 1ms
+#define SERVOMAX  (2.5 * 4096 / PULSE) // this is the 'maximum' pulse length count (out of 4096) - 2ms
+
+
+
+void writeServo(uint8_t n, float rotation, bool mirror) {
+  Adafruit_PWMServoDriver& pwm = n < 16 ? pwm1 : pwm2;
+  rotation = mirror ? 180 - rotation : rotation;
+  int pulse = SERVOMIN + (rotation/180)*(SERVOMAX-SERVOMIN);
+  n = n < 16 ? n : n - 16;
+  pwm.setPWM(n, 0, pulse);
+}
+
+
+void updateServo(ServoCtrl& ctrl, float interval, bool mirror)
 {
   
   ctrl.passedTime += interval;
   if(ctrl.passedTime >= ctrl.targetTime) {
     ctrl.passedTime = ctrl.targetTime; // prevent overflow
-    ctrl.servo.write(ctrl.targetPos);
+    writeServo(ctrl.servoNum, ctrl.targetPos, mirror);
     //Serial.println(ctrl.targetPos);
   } else {
     int curPos = ctrl.startPos + (ctrl.targetPos - ctrl.startPos) * ((float)ctrl.passedTime / ctrl.targetTime);
     int movement = (ctrl.targetPos - ctrl.startPos) * (interval / ctrl.targetTime);
     curPos += movement; //(ABS(movement) > 0 ? movement : SIGN(ctrl.targetPos - ctrl.startPos));
-    ctrl.servo.write(curPos);
+    writeServo(ctrl.servoNum, curPos, mirror);
     //Serial.print(curPos);
     //Serial.print(" to ");
     //Serial.println(ctrl.targetPos);
@@ -43,16 +64,18 @@ float lawOfCosines(float a, float b, float c) {
   return acos((a*a + b*b - c*c) / (2 * a * b));
 }
 
-Foot::Foot() : servos{ServoCtrl(90), ServoCtrl(0), ServoCtrl(90)} {}
+Foot::Foot() : servos{ServoCtrl(90), ServoCtrl(0), ServoCtrl(90)}, mirror(false), isAttached(false) {}
 
-void Foot::attach(int pin1, int pin2, int pin3){
-  servos[0].servo.attach(pin1);
-  servos[1].servo.attach(pin2);
-  servos[2].servo.attach(pin3);
+void Foot::attach(int pin1, int pin2, int pin3, bool mirror){  
+  servos[0].servoNum = pin1;
+  servos[1].servoNum = pin2;
+  servos[2].servoNum = pin3;
+  this->mirror = mirror;
 
-  servos[0].servo.write(servos[0].startPos);
-  servos[1].servo.write(servos[1].startPos);
-  servos[2].servo.write(servos[2].startPos);
+  writeServo(servos[0].servoNum, servos[0].startPos, mirror);
+  writeServo(servos[1].servoNum, servos[1].startPos, mirror);
+  writeServo(servos[2].servoNum, servos[2].startPos, mirror); 
+
   isAttached = true;
 }
 void Foot::moveTo(float x, float y, float z, long ms){
@@ -87,19 +110,26 @@ void Foot::moveTo(float x, float y, float z, long ms){
   //Serial.print("Equals "); Serial.print(alpha); Serial.print("/"); Serial.print(beta); Serial.print("/"); Serial.println(gamma);
   //Serial.print("Using "); Serial.print(dist); Serial.print("/"); Serial.print(d1); Serial.print("/"); Serial.println(d2);
 
-  moveServo(servos[0], 90 + alpha, ms);
-  moveServo(servos[1], 90 - beta, ms);
-  moveServo(servos[2], 180 - gamma, ms);
+   moveServo(servos[0], 90 + alpha, ms);
+   moveServo(servos[1], 90 - beta, ms);
+   moveServo(servos[2], 180 - gamma, ms);
 }
 
 void Foot::update(int ms) {
-  updateServo(servos[0], ms);
-  updateServo(servos[1], ms);
-  updateServo(servos[2], ms);
+  updateServo(servos[0], ms, mirror);
+  updateServo(servos[1], ms, mirror);
+  updateServo(servos[2], ms, mirror);
 }
 
 bool Foot::isDone(){
   return servos[0].passedTime >= servos[0].targetTime
          && servos[1].passedTime >= servos[1].targetTime
          && servos[2].passedTime >= servos[2].targetTime;
+}
+
+void Foot::setupPWM(){
+  pwm1.begin();
+  pwm2.begin();
+  pwm1.setPWMFreq(SERVOFREQ);
+  pwm2.setPWMFreq(SERVOFREQ);
 }
