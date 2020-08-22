@@ -7,7 +7,7 @@ lift = 50
 dist = 70
 speed = 0.7
 
-arduino_port = 'COM17'
+arduino_port = 'dev/ttyUSB0'
 serial = connect_arduino(arduino_port)
 time.sleep(0.5)
 
