@@ -34,7 +34,7 @@ void processSerial() {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Hello");
   Foot::setupPWM();
 
@@ -50,6 +50,7 @@ void setup() {
 
 void loop() {
   char ch;
+  unsigned long t = millis();
   while (Serial.available()) {
     ch = Serial.read();
     Serial.print(ch);
@@ -62,9 +63,12 @@ void loop() {
     }
   }
 
-
-  delay(10);
+  unsigned long passed = millis() - t;
+  if(passed < 5) {
+    delay(5);
+    passed += 5;
+  }
   for(int i = 0; i < 6; i++) {
-    feet[i].update(10);
+    feet[i].update(passed);
   }
 }
